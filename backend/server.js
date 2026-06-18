@@ -268,7 +268,6 @@ setInterval(async () => {
 }, 60000);
 
 // Serve static frontend in production
-const path = require('path');
 const frontendPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(frontendPath));
 
