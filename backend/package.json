@@ -4,6 +4,7 @@
   "description": "Backend API for Daily Activity Portal",
   "main": "server.js",
   "scripts": {
+    "postinstall": "cd ../frontend && npm install --include=dev && npm run build",
     "start": "node server.js",
     "dev": "node server.js"
   },
