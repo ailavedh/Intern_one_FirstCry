@@ -164,7 +164,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     if (err.code === 'ETIMEDOUT' || err.code === 'ECONNECTION') {
       console.error('SMTP Connection Timeout: Render might be blocking outbound SMTP connections.');
     }
-    res.status(500).json({ error: 'Failed to process forgot password request.' });
+    res.status(500).json({ error: 'Failed to process forgot password request: ' + err.message });
   }
 });
 
