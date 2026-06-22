@@ -5,6 +5,8 @@ const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first'); // Force IPv4 to prevent ENETUNREACH on IPv6-only Render environments
 
 const db = require('./config/db');
 const { resetDatabase } = require('./config/db');
