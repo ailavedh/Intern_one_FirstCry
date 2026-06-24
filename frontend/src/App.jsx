@@ -54,6 +54,9 @@ export default function App() {
   }, [currentUser, activeTab]);
 
   // Premium dark mode is now default out-of-the-box in index.css
+  useEffect(() => {
+    document.body.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
 
   // Set the default dashboard view tab based on role type
   const setTabForRole = (role) => {
@@ -122,6 +125,7 @@ export default function App() {
       case 'counsellor':
         return (
           <CounsellorDashboard 
+            activeTab={activeTab}
             currentUser={currentUser} 
           />
         );
@@ -182,7 +186,27 @@ export default function App() {
       />
       <main className="main-content" style={{ position: 'relative' }}>
         {/* Profile Icon Top Right */}
-        <div style={{ position: 'absolute', top: '1rem', right: '1.5rem', zIndex: 10 }}>
+        <div style={{ position: 'absolute', top: '1rem', right: '1.5rem', zIndex: 10, display: 'flex', gap: '0.75rem' }}>
+          <button
+            onClick={handleThemeToggle}
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--bg-secondary)',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+              color: 'var(--color-primary)'
+            }}
+            title="Toggle Theme"
+          >
+            {theme === 'dark' ? <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg> : <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>}
+          </button>
           <button 
             onClick={() => setIsProfileOpen(true)}
             style={{ 

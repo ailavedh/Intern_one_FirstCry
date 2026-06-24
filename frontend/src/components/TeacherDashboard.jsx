@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Baby, CalendarDays, PlusCircle, CheckCircle, Upload, X, Trash2 } from 'lucide-react';
+import { Baby, CalendarDays, PlusCircle, CheckCircle, Upload, X, Trash2, Sparkles } from 'lucide-react';
+import FeedbackViewer from './FeedbackViewer';
 
 export default function TeacherDashboard({ activeTab, currentUser }) {
   const [children, setChildren] = useState([]);
@@ -11,6 +12,7 @@ export default function TeacherDashboard({ activeTab, currentUser }) {
   const [description, setDescription] = useState('');
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [toast, setToast] = useState('');
 
   const [showStatsModal, setShowStatsModal] = useState(false);
@@ -98,6 +100,29 @@ export default function TeacherDashboard({ activeTab, currentUser }) {
     }
   };
 
+  const handleAnalyzePhoto = async () => {
+    if (!photoFile) return triggerToast('Please upload a photo to analyze.');
+    setIsAnalyzing(true);
+    
+    const formData = new FormData();
+    formData.append('photo', photoFile);
+
+    try {
+      const res = await fetch('/api/ai/analyze-photo', { method: 'POST', body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        setDescription(data.description);
+        triggerToast('AI generated description successfully!');
+      } else {
+        triggerToast('AI analysis failed.');
+      }
+    } catch (err) {
+      triggerToast('Error connecting to AI service.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const openDirectLog = (childId) => {
     setSelectedKids([childId]);
     setShowModal(true);
@@ -154,7 +179,7 @@ export default function TeacherDashboard({ activeTab, currentUser }) {
         </div>
       </div>
 
-      {activeTab === 'roster' ? (
+      {activeTab === 'roster' && (
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
@@ -195,7 +220,9 @@ export default function TeacherDashboard({ activeTab, currentUser }) {
             })}
           </div>
         </div>
-      ) : (
+      )}
+
+      {activeTab === 'activities' && (
         <div className="card">
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
             <CalendarDays size={20} /> Class Logs History
@@ -210,7 +237,6 @@ export default function TeacherDashboard({ activeTab, currentUser }) {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <span className={`badge ${getBadgeClass(a.type)}`}>{a.type}</span>
-                    {/* TRASH CAN BUTTON FOR DYNAMIC DELETE */}
                     <button onClick={() => handleDeleteActivity(a.id)} style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Delete Log">
                       <Trash2 size={18} />
                     </button>
@@ -224,6 +250,10 @@ export default function TeacherDashboard({ activeTab, currentUser }) {
             )}
           </div>
         </div>
+      )}
+
+      {activeTab === 'feedback' && (
+        <FeedbackViewer currentUser={currentUser} />
       )}
 
       {/* Activity Logging Modal */}
@@ -253,7 +283,19 @@ export default function TeacherDashboard({ activeTab, currentUser }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Description</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <label className="form-label" style={{ marginBottom: 0 }}>Description</label>
+                  {photoFile && (
+                    <button 
+                      type="button" 
+                      onClick={handleAnalyzePhoto} 
+                      disabled={isAnalyzing}
+                      style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', fontWeight: 'bold' }}
+                    >
+                      <Sparkles size={14} /> {isAnalyzing ? 'Analyzing...' : 'Auto-Generate'}
+                    </button>
+                  )}
+                </div>
                 <textarea 
                   className="form-textarea" 
                   rows="3" 

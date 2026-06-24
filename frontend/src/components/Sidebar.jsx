@@ -42,16 +42,19 @@ export default function Sidebar({
       case 'teacher':
         return [
           { id: 'roster', label: 'Student Portal', icon: <Baby size={18} /> },
-          { id: 'activities', label: 'Activity Logs', icon: <CalendarDays size={18} /> }
+          { id: 'activities', label: 'Activity Logs', icon: <CalendarDays size={18} /> },
+          { id: 'feedback', label: 'Parent Feedback', icon: <FileHeart size={18} /> }
         ];
       case 'parent':
         return [
           { id: 'timeline', label: 'Activity Timeline', icon: <CalendarDays size={18} /> },
-          { id: 'counsellor', label: 'Counsellor Notes', icon: <FileHeart size={18} /> }
+          { id: 'counsellor', label: 'Counsellor Notes', icon: <FileHeart size={18} /> },
+          { id: 'feedback', label: 'Submit Feedback', icon: <BookOpen size={18} /> }
         ];
       case 'counsellor':
         return [
-          { id: 'assessments', label: 'Child Assessments', icon: <BrainCircuit size={18} /> }
+          { id: 'assessments', label: 'Child Assessments', icon: <BrainCircuit size={18} /> },
+          { id: 'feedback', label: 'Parent Feedback', icon: <FileHeart size={18} /> }
         ];
       default:
         return [];

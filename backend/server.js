@@ -4,7 +4,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
+const { GoogleGenAI } = require('@google/genai');
 require('dotenv').config();
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const db = require('./config/db');
 const { resetDatabase } = require('./config/db');
@@ -381,6 +384,60 @@ app.post('/api/children/:id/stats', async (req, res) => {
   } catch (err) {
     console.error('Stats error:', err);
     res.status(500).json({ error: 'Failed to update stats' });
+  }
+});
+
+// AI Analyze Photo Endpoint
+app.post('/api/ai/analyze-photo', upload.single('photo'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No photo provided.' });
+  try {
+    const prompt = "You are a professional childcare teacher. Write a short, sweet, 1-2 sentence description of what the child is doing in this photo to send to their parents. Be enthusiastic.";
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: prompt },
+            { inlineData: { data: req.file.buffer.toString("base64"), mimeType: req.file.mimetype } }
+          ]
+        }
+      ]
+    });
+    res.json({ description: response.text });
+  } catch (err) {
+    console.error('AI Error:', err);
+    res.status(500).json({ error: 'Failed to analyze photo.' });
+  }
+});
+
+// Feedback Endpoints
+app.post('/api/feedbacks', async (req, res) => {
+  const { parentId, recipientId, childId, message } = req.body;
+  if (!parentId || !recipientId || !childId || !message) return res.status(400).json({ error: 'Missing fields' });
+  try {
+    await db.query('INSERT INTO feedbacks (parent_id, recipient_id, child_id, message) VALUES (?, ?, ?, ?)', [parseInt(parentId), parseInt(recipientId), parseInt(childId), message]);
+    res.status(201).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to submit feedback' });
+  }
+});
+
+app.get('/api/feedbacks/recipient/:recipientId', async (req, res) => {
+  try {
+    const sql = `SELECT f.*, p.name as parent_name, c.name as child_name FROM feedbacks f JOIN users p ON f.parent_id = p.id JOIN children c ON f.child_id = c.id WHERE f.recipient_id = ? ORDER BY f.timestamp DESC`;
+    res.json(await db.query(sql, [parseInt(req.params.recipientId)]));
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to get feedbacks' });
+  }
+});
+
+app.get('/api/feedbacks/parent/:parentId', async (req, res) => {
+  try {
+    const sql = `SELECT f.*, r.name as recipient_name, r.role as recipient_role, c.name as child_name FROM feedbacks f JOIN users r ON f.recipient_id = r.id JOIN children c ON f.child_id = c.id WHERE f.parent_id = ? ORDER BY f.timestamp DESC`;
+    res.json(await db.query(sql, [parseInt(req.params.parentId)]));
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to get feedbacks' });
   }
 });
 

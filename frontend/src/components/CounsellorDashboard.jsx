@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrainCircuit, Baby, ScrollText, CheckCircle2, ChevronRight, FileHeart, CalendarRange } from 'lucide-react';
+import FeedbackViewer from './FeedbackViewer';
 
-export default function CounsellorDashboard({ currentUser }) {
+export default function CounsellorDashboard({ activeTab, currentUser }) {
   const [children, setChildren] = useState([]);
   const [selectedChildId, setSelectedChildId] = useState(null);
   const [childActivities, setChildActivities] = useState([]);
@@ -107,132 +108,138 @@ export default function CounsellorDashboard({ currentUser }) {
         </div>
       </div>
 
-      <div className="dashboard-grid">
-        {/* Child Selector & History Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* Child Picker Card */}
-          <div className="card">
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-              <Baby size={20} /> Active Students
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '250px', overflowY: 'auto' }}>
-              {children.map(c => (
-                <div 
-                  key={c.id} 
-                  onClick={() => setSelectedChildId(c.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.75rem 1rem',
-                    borderRadius: '0.5rem',
-                    cursor: 'pointer',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: selectedChildId === c.id ? 'rgba(99, 102, 241, 0.08)' : 'var(--bg-secondary)',
-                    borderColor: selectedChildId === c.id ? 'var(--color-primary)' : 'var(--border-color)',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.9rem' }}>{c.name}</strong>
-                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>Class: {c.class_name}</span>
-                  </div>
-                  <ChevronRight size={18} style={{ color: selectedChildId === c.id ? 'var(--color-primary)' : 'var(--text-muted)' }} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Teacher Log reviews */}
-          <div className="card">
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-              <CalendarRange size={20} /> Classroom Logs History
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '350px', overflowY: 'auto', paddingRight: '0.25rem' }}>
-              {childActivities.map(a => (
-                <div key={a.id} style={{ padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '0.5rem', backgroundColor: 'var(--bg-secondary)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(a.timestamp).toLocaleDateString()}</span>
-                    <span style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>{a.type}</span>
-                  </div>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{a.description}</p>
-                </div>
-              ))}
-              {childActivities.length === 0 && (
-                <p className="text-muted" style={{ fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>
-                  No teacher activities logged for this child.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Note Logging Form & Past Evaluations Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {activeChild && (
+      {activeTab === 'assessments' && (
+        <div className="dashboard-grid">
+          {/* Child Selector & History Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {/* Child Picker Card */}
             <div className="card">
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                <BrainCircuit size={20} style={{ color: 'var(--color-secondary)' }} /> New Developmental Assessment
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <Baby size={20} /> Active Students
               </h3>
-              <form onSubmit={handleSubmitAssessment}>
-                <div className="form-group">
-                  <label className="form-label">Developmental Observations ({activeChild.name})</label>
-                  <textarea
-                    className="form-textarea"
-                    rows="3"
-                    placeholder="Document behavioral progress, skills acquired, social milestones..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  ></textarea>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Actionable Recommendations</label>
-                  <textarea
-                    className="form-textarea"
-                    rows="3"
-                    placeholder="Provide recommendations for home reinforcement or special exercises..."
-                    value={recommendations}
-                    onChange={(e) => setRecommendations(e.target.value)}
-                  ></textarea>
-                </div>
-
-                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-                  Submit & Publish Note
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Past Evaluations list */}
-          <div className="card">
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-              <FileHeart size={20} /> Evaluation Archives
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '350px', overflowY: 'auto' }}>
-              {notesHistory.map(n => (
-                <div key={n.id} style={{ borderLeft: '3px solid var(--color-secondary)', paddingLeft: '0.75rem', margin: '0.25rem 0' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
-                    <strong>{n.counsellor_name}</strong>
-                    <span>{new Date(n.timestamp).toLocaleDateString()}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '250px', overflowY: 'auto' }}>
+                {children.map(c => (
+                  <div 
+                    key={c.id} 
+                    onClick={() => setSelectedChildId(c.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '0.5rem',
+                      cursor: 'pointer',
+                      border: '1px solid var(--border-color)',
+                      backgroundColor: selectedChildId === c.id ? 'rgba(99, 102, 241, 0.08)' : 'var(--bg-secondary)',
+                      borderColor: selectedChildId === c.id ? 'var(--color-primary)' : 'var(--border-color)',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>{c.name}</strong>
+                      <span className="text-muted" style={{ fontSize: '0.75rem' }}>Class: {c.class_name}</span>
+                    </div>
+                    <ChevronRight size={18} style={{ color: selectedChildId === c.id ? 'var(--color-primary)' : 'var(--text-muted)' }} />
                   </div>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                    <strong>Obs: </strong>{n.notes}
+                ))}
+              </div>
+            </div>
+
+            {/* Teacher Log reviews */}
+            <div className="card">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <CalendarRange size={20} /> Classroom Logs History
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '350px', overflowY: 'auto', paddingRight: '0.25rem' }}>
+                {childActivities.map(a => (
+                  <div key={a.id} style={{ padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '0.5rem', backgroundColor: 'var(--bg-secondary)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(a.timestamp).toLocaleDateString()}</span>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>{a.type}</span>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{a.description}</p>
+                  </div>
+                ))}
+                {childActivities.length === 0 && (
+                  <p className="text-muted" style={{ fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>
+                    No teacher activities logged for this child.
                   </p>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontStyle: 'italic' }}>
-                    <strong>Rec: </strong>{n.recommendations}
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Note Logging Form & Past Evaluations Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {activeChild && (
+              <div className="card">
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                  <BrainCircuit size={20} style={{ color: 'var(--color-secondary)' }} /> New Developmental Assessment
+                </h3>
+                <form onSubmit={handleSubmitAssessment}>
+                  <div className="form-group">
+                    <label className="form-label">Developmental Observations ({activeChild.name})</label>
+                    <textarea
+                      className="form-textarea"
+                      rows="3"
+                      placeholder="Document behavioral progress, skills acquired, social milestones..."
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                    ></textarea>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Actionable Recommendations</label>
+                    <textarea
+                      className="form-textarea"
+                      rows="3"
+                      placeholder="Provide recommendations for home reinforcement or special exercises..."
+                      value={recommendations}
+                      onChange={(e) => setRecommendations(e.target.value)}
+                    ></textarea>
+                  </div>
+
+                  <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                    Submit & Publish Note
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* Past Evaluations list */}
+            <div className="card">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <FileHeart size={20} /> Evaluation Archives
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '350px', overflowY: 'auto' }}>
+                {notesHistory.map(n => (
+                  <div key={n.id} style={{ borderLeft: '3px solid var(--color-secondary)', paddingLeft: '0.75rem', margin: '0.25rem 0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
+                      <strong>{n.counsellor_name}</strong>
+                      <span>{new Date(n.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                      <strong>Obs: </strong>{n.notes}
+                    </p>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontStyle: 'italic' }}>
+                      <strong>Rec: </strong>{n.recommendations}
+                    </p>
+                  </div>
+                ))}
+                {notesHistory.length === 0 && (
+                  <p className="text-muted" style={{ fontSize: '0.85rem', textAlign: 'center', padding: '1.5rem' }}>
+                    No counselor notes archived for this child.
                   </p>
-                </div>
-              ))}
-              {notesHistory.length === 0 && (
-                <p className="text-muted" style={{ fontSize: '0.85rem', textAlign: 'center', padding: '1.5rem' }}>
-                  No counselor notes archived for this child.
-                </p>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === 'feedback' && (
+        <FeedbackViewer currentUser={currentUser} />
+      )}
 
       {/* Toast notification */}
       {toast && (

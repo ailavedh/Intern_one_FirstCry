@@ -9,7 +9,8 @@ import {
   Heart, 
   FileHeart, 
   Activity, 
-  Droplet 
+  Droplet,
+  BookOpen
 } from 'lucide-react';
 
 export default function ParentPortal({ activeTab, currentUser }) {
@@ -17,6 +18,11 @@ export default function ParentPortal({ activeTab, currentUser }) {
   const [selectedChildId, setSelectedChildId] = useState(null);
   const [activities, setActivities] = useState([]);
   const [counsellorNotes, setCounsellorNotes] = useState([]);
+
+  // Feedback states
+  const [staff, setStaff] = useState([]);
+  const [feedbackRecipient, setFeedbackRecipient] = useState('');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
 
   // Fetch children mapped to this parent
   const fetchChildren = async () => {
@@ -62,9 +68,20 @@ export default function ParentPortal({ activeTab, currentUser }) {
     }
   };
 
+  const fetchStaff = async () => {
+    try {
+      const res = await fetch('/api/users');
+      if (res.ok) {
+        const data = await res.json();
+        setStaff(data.filter(u => u.role === 'teacher' || u.role === 'counsellor'));
+      }
+    } catch (err) { console.error(err); }
+  };
+
   useEffect(() => {
     if (currentUser?.id) {
       fetchChildren();
+      fetchStaff();
     }
   }, [currentUser]);
 
@@ -76,6 +93,33 @@ export default function ParentPortal({ activeTab, currentUser }) {
   }, [selectedChildId]);
 
   const activeChild = children.find(c => c.id === selectedChildId);
+
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    if (!feedbackRecipient || !feedbackMessage.trim()) return alert('Please select a recipient and write a message.');
+    if (!selectedChildId) return alert('Please select a child.');
+
+    try {
+      const res = await fetch('/api/feedbacks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parentId: currentUser.id,
+          recipientId: feedbackRecipient,
+          childId: selectedChildId,
+          message: feedbackMessage
+        })
+      });
+      if (res.ok) {
+        alert('Feedback submitted successfully!');
+        setFeedbackMessage('');
+      } else {
+        alert('Failed to submit feedback.');
+      }
+    } catch (err) {
+      alert('Network error.');
+    }
+  };
 
   // Icon switcher helper for activities
   const getActivityIcon = (type) => {
@@ -287,6 +331,45 @@ export default function ParentPortal({ activeTab, currentUser }) {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {activeTab === 'feedback' && (
+            <div className="card">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                <BookOpen size={20} className="text-primary" /> Submit Feedback
+              </h3>
+              <p className="text-muted" style={{ marginBottom: '1.5rem' }}>
+                Share your thoughts, concerns, or appreciation with {activeChild.name}'s teachers and counsellors.
+              </p>
+              <form onSubmit={handleFeedbackSubmit}>
+                <div className="form-group">
+                  <label className="form-label">Recipient (Teacher or Counsellor)</label>
+                  <select 
+                    className="form-select" 
+                    value={feedbackRecipient} 
+                    onChange={e => setFeedbackRecipient(e.target.value)}
+                  >
+                    <option value="">-- Select Staff Member --</option>
+                    {staff.map(s => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Your Message</label>
+                  <textarea
+                    className="form-textarea"
+                    rows="4"
+                    placeholder={`Write your feedback regarding ${activeChild.name}...`}
+                    value={feedbackMessage}
+                    onChange={e => setFeedbackMessage(e.target.value)}
+                  ></textarea>
+                </div>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                  Send Feedback
+                </button>
+              </form>
             </div>
           )}
         </div>
