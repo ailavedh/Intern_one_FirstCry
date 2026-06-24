@@ -15,19 +15,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-app.use('/uploads', express.static(uploadsDir));
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
@@ -294,7 +282,11 @@ app.post('/api/activities', upload.single('photo'), async (req, res) => {
   catch (e) { ids = typeof childIds === 'string' ? childIds.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x)) : [parseInt(childIds)]; }
   if (ids.length === 0) return res.status(400).json({ error: 'Valid childId required.' });
 
-  let photo_url = req.file ? `/uploads/${req.file.filename}` : null;
+  let photo_url = null;
+  if (req.file) {
+    const b64 = Buffer.from(req.file.buffer).toString('base64');
+    photo_url = `data:${req.file.mimetype};base64,${b64}`;
+  }
 
   try {
     const teacher = await db.query('SELECT id, role FROM users WHERE id = ?', [teacherId]);
