@@ -69,6 +69,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+::selection {
+  background-color: rgba(139, 92, 246, 0.3); /* Soft primary color for light mode */
+  color: inherit;
+}
+
+.dark ::selection {
+  background-color: #ffffff;
+  color: #0f172a; /* Dark text for comfortable reading on white background */
+}
+
 h1,
 h2,
 h3,
